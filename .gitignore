@@ -1,0 +1,60 @@
+# ========================
+# IDE / Editor / OS
+# ========================
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+#Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+#DBS
+
+
+
+# ========================
+# Python / Django
+# ========================
+
+# Виртуальные окружения
+venv/
+.venv/
+env/
+
+# Python кэш и временные файлы
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Основные скрипты
+
+# Django файлы
+static/
+backups/
+*.sql
+*.BSON
+*.rdb
+*.db
+
+*.env
+.env.*
+!*.env.example
