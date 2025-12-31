@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent
 ENV_DIR = BASE_DIR / "environments"
-env_style = os.getenv("ENV_STYLE", "dev")
+env_style = os.getenv("ENV_TYPE", "dev")
 env_file = ENV_DIR / f".env.{env_style}"
 
 class DBSettings(BaseSettings):
@@ -24,6 +24,3 @@ class DBSettings(BaseSettings):
         env_file=env_file
     )
 
-
-if __name__ == "__main__":
-    print(DBSettings().url)

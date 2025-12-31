@@ -1,16 +1,28 @@
-# This is a sample Python script.
+import os
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from fastapi import FastAPI,HTTPException
+from db.api import Database
+from sqlalchemy import text
+
+app = FastAPI(debug=False if os.getenv('ENV_TYPE') == "prod" else True)
+db = Database()
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+@app.on_event("startup")
+async def startup():
+    await db.connect()
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+@app.on_event("shutdown")
+async def shutdown():
+    await db.close()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+@app.get("/health")
+async def health():
+    try:
+        async with db.session() as session:
+            await session.execute(text("SELECT 1"))
+        return {"status": "ok", "db": "connected"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB connection error: {e}")
