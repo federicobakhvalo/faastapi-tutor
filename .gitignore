@@ -48,7 +48,7 @@ __pycache__/
 # Основные скрипты
 
 # Django файлы
-static/
+#static/
 backups/
 *.sql
 *.BSON
@@ -58,3 +58,6 @@ backups/
 *.env
 .env.*
 !*.env.example
+
+node_modules/
+build/

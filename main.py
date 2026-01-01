@@ -6,15 +6,18 @@ from sqlalchemy import text
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from routes.routes import router
+from fastapi.staticfiles import StaticFiles
 
 
 app = FastAPI(debug=False if os.getenv('ENV_TYPE') == "prod" else True)
 db = Database()
 app.include_router(router)
+app.mount("/static",StaticFiles(directory="static"),name="static")
 
 
 @app.on_event("startup")
 async def startup():
+
     await db.connect()
 
 

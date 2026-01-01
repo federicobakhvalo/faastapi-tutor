@@ -21,18 +21,16 @@ class Database:
         return cls._instance
 
     async def connect(self):
+
         if self._engine is not None:
             return
-
         settings = DBSettings()
-
-        print(settings.url)
-
         self._engine = create_async_engine(
             settings.url,
             echo=True,               # выключить на проде
             pool_pre_ping=True,
         )
+
 
         self._session_factory = async_sessionmaker(
             self._engine,
