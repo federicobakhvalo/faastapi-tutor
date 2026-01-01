@@ -20,10 +20,27 @@ async def main(request: Request):
 
 
 @router.get('/create_reader/', response_class=HTMLResponse)
-async def create_reader(request: Request):
+async def create_reader_form(request: Request):
     return templates.TemplateResponse(
         "forms/form.html",
-        {"request": request, "title": "Создать читателя","form":ReaderForm() }
+        {"request": request, "title": "Создать читателя", "form": ReaderForm()}
     )
 
 
+@router.post("/create_reader/",response_class=HTMLResponse)
+async def create_reader(request: Request):
+    data = dict(await request.form())
+    form = ReaderForm(data)
+    if not form.is_valid():
+        return templates.TemplateResponse(
+            "forms/form.html",
+            {
+                "request": request,
+                "title": "Создать читателя",
+                "form": form
+            }
+        )
+
+    print(form.cleaned_data.model_dump())
+
+    return '<h1>HelloWorld</h1>'
