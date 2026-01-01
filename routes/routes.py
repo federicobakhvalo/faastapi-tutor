@@ -8,5 +8,12 @@ router=APIRouter()
 
 
 @router.get("/", response_class=HTMLResponse)
-async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "title": "Главная страница"})
+async def main(request: Request):
+    items=[
+        {'title': 'Все книги', 'url': '#'},
+        {'title': 'Предложить книгу', 'url': '#'},
+        {'title': 'Создать читателя', 'url': '#'},
+        {'title': 'Выдача книг', 'url': '#'},
+        {'title': "Создать читательский билет", 'url': "#"}
+    ]
+    return templates.TemplateResponse("main.html", {"request": request, "items": items})

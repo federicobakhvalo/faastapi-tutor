@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="flex items-center grow justify-center my-2">
+	<div class="m-auto w-full max-w-96 flex flex-col gap-2">
+		{% for item in items %}
+		<a href="{{ item.url }}">
+			<button
+				class="cursor-pointer inline-flex bg-[#252525f2] items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white focus:outline-none hover:bg-[#393939f2] disabled:opacity-50 disabled:pointer-events-none w-full">
+				{{ item.title }}
+			</button>
+		</a>
+		{% endfor %}
+	</div>
+</div>
+
+
+{% endblock %}
