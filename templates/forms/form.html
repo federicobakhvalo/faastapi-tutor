@@ -1,0 +1,39 @@
+
+{% extends "base.html" %}
+{% block content %}
+
+<div class="grow max-w-2xl flex flex-col m-auto w-full py-2.5 px-1 pt-3">
+	<h2 class="font-semibold text-xl sm:text-2xl">{{ title }}</h2>
+	<form method="post" novalidate class="flex flex-col gap-4 my-2.5">
+		{% for field in form %}
+		<div class="flex flex-col">
+			<label for="{{ field.name }}" class="text-white font-medium mb-1 text-xs">
+				{{ field.label }}
+			</label>
+
+			<input id="{{ field.name }}" name="{{ field.name }}" type="{{ field.input_type }}"
+				placeholder="{{ field.placeholder }}" value="{{ field.value }}"
+				class="w-full rounded-lg border border-gray-700 bg-[#191919] border-[#303030] text-white px-3 py-2 focus:outline-none {{ field.extra_class }}" {% if field.required %}required{% endif %} {% for attr,
+				val in field.attrs.items() %} {{ attr }}="{{ val }}" {% endfor %}>
+
+			{% if field.errors %}
+			<p class="text-red-500 text-sm mt-1">{{ field.errors | join(", ") }}</p>
+			{% endif %}
+		</div>
+		{% endfor %}
+
+		<button type="submit"
+			class="cursor-pointer inline-flex bg-[#252525f2] items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white focus:outline-none hover:bg-[#393939f2] disabled:opacity-50 disabled:pointer-events-none w-full my-2">
+			Сохранить
+		</button>
+	</form>
+</div>
+
+
+{% endblock %}
+
+
+
+
+
+
