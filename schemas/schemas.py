@@ -1,6 +1,7 @@
-from pydantic import BaseModel, EmailStr, HttpUrl, field_validator,Field
+from pydantic import BaseModel, EmailStr, HttpUrl, field_validator, Field
 from typing import Optional
 import re
+
 
 class ReaderCreateSchema(BaseModel):
     first_name: str = Field(..., min_length=1, description="Имя должно быть хотя бы 1 символ")
@@ -13,18 +14,49 @@ class ReaderCreateSchema(BaseModel):
     )
     cover_url: Optional[HttpUrl] = None
 
-    @field_validator("phone", "cover_url",mode='before')
+    @field_validator("phone", "cover_url", mode='before')
     @classmethod
     def empty_to_none(cls, v):
-        # Если пустая строка — превращаем в None
         if v is None:
             return None
         if isinstance(v, str) and v.strip() == "":
             return None
         return v
 
-    @field_validator("first_name", "last_name",mode='before')
+    @field_validator("first_name", "last_name", mode='before')
     @classmethod
     def strip_names(cls, v: str) -> str:
-        """Удаляем пробелы в начале и конце"""
         return v.strip()
+
+
+class BookCreateSchema(BaseModel):
+    author_id: int
+    bookname: str = Field(..., min_length=1)
+    review: str | None = None
+    amount: int = Field(ge=0)
+    cover_url: HttpUrl
+
+    @field_validator("bookname", "review", mode="before")
+    @classmethod
+    def strip(cls, v):
+        if isinstance(v, str):
+            return v.strip()
+        return v
+
+    @field_validator("review", mode="before")
+    @classmethod
+    def empty_to_none(cls, v):
+        if v == "":
+            return None
+        return v
+
+    @field_validator("cover_url")
+    @classmethod
+    def validate_image_extension(cls, v: HttpUrl) -> HttpUrl:
+        allowed_ext = (".jpg", ".jpeg", ".png", ".webp")
+        url = str(v).lower()
+        if not url.endswith(allowed_ext):
+            raise ValueError(
+                "URL обложки должен оканчиваться на .jpg, .jpeg, .png или .webp"
+            )
+        return v

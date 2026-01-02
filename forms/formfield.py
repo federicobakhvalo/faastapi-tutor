@@ -37,3 +37,6 @@ class SelectField(FormField):
         super().__init__(name, label, required=required, input_type="select", placeholder=placeholder, attrs=attrs,
                          extra_class=extra_class)
         self.choices = choices
+
+
+

@@ -21,6 +21,13 @@
 				</option>
 				{% endfor %}
 			</select>
+
+			{% elif field.input_type == "textarea" %}
+			<textarea name="{{ field.name }}" placeholder="{{ field.placeholder }}" class="w-full rounded-lg border border-gray-700 bg-[#191919] border-[#303030] text-white px-3 py-2 focus:outline-none {{ field.extra_class }}"
+				 {% if field.required %}required{% endif %} {% for k, v in
+				field.attrs.items() %} {{ k }}="{{ v }}" {% endfor %}>{{ field.value }}</textarea>
+
+
 			{% else %}
 
 			<input  id="{{ field.name }}" name="{{ field.name }}" type="{{ field.input_type }}"

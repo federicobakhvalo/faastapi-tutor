@@ -24,7 +24,7 @@ class Base(DeclarativeBase):
 
 
 class BookAuthor(Base):
-    __tablename__ = "library_app_book_author"
+    __tablename__ = "library_app_bookauthor"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(1000), unique=True, nullable=False)
@@ -46,7 +46,7 @@ class Book(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     author_id: Mapped[int] = mapped_column(
-        ForeignKey("library_app_book_author.id", ondelete="CASCADE"),
+        ForeignKey("library_app_bookauthor.id", ondelete="CASCADE"),
         nullable=False
     )
 

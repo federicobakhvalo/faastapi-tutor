@@ -30,6 +30,13 @@ async def create_reader_form(request: Request):
     )
 
 
+@router.get("/create_book/", response_class=HTMLResponse)
+async def create_book_form(request: Request):
+    author_choices = await BookAuthorRepository().list_choices()
+    form = BookForm(author_choices=author_choices)
+    return templates.TemplateResponse("forms/form.html", {"request": request, "title": "Создать книгу", "form": form})
+
+
 @router.post("/create_reader/", response_class=HTMLResponse)
 async def create_reader(request: Request):
     data = dict(await request.form())
