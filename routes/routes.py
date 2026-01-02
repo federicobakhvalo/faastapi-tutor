@@ -1,7 +1,10 @@
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi import FastAPI, HTTPException, Request, APIRouter
+from sqlalchemy.exc import IntegrityError
+
 from forms._forms import *
+from db.repositories import *
 
 templates = Jinja2Templates(directory="templates")
 router = APIRouter()
@@ -12,7 +15,7 @@ async def main(request: Request):
     items = [
         {'title': 'Все книги', 'url': '#'},
         {'title': 'Предложить книгу', 'url': '#'},
-        {'title': 'Создать читателя', 'url': '#'},
+        {'title': 'Создать читателя', 'url': '/create_reader/'},
         {'title': 'Выдача книг', 'url': '#'},
         {'title': "Создать читательский билет", 'url': "#"}
     ]
@@ -27,7 +30,7 @@ async def create_reader_form(request: Request):
     )
 
 
-@router.post("/create_reader/",response_class=HTMLResponse)
+@router.post("/create_reader/", response_class=HTMLResponse)
 async def create_reader(request: Request):
     data = dict(await request.form())
     form = ReaderForm(data)
@@ -40,7 +43,20 @@ async def create_reader(request: Request):
                 "form": form
             }
         )
-
-    print(form.cleaned_data.model_dump())
-
-    return '<h1>HelloWorld</h1>'
+    repo = ReaderRepository()
+    try:
+        await repo.create(form.cleaned_data.model_dump())
+    except IntegrityError:
+        form.add_error(
+            "__all__",
+            "Не удалось сохранить данные. Возможно, такие данные уже существуют."
+        )
+        return templates.TemplateResponse(
+            "forms/form.html",
+            {
+                "request": request,
+                "title": "Создать читателя",
+                "form": form,
+            }
+        )
+    return RedirectResponse("/", status_code=303)

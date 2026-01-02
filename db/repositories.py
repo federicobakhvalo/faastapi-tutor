@@ -1,5 +1,5 @@
-from api import Database
-from models import *
+from .api import Database
+from .models import *
 
 db = Database()
 

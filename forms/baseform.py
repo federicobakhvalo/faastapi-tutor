@@ -18,6 +18,9 @@ class BaseForm:
     def init_fields(self):
         raise NotImplementedError
 
+    def add_error(self, field: str, message: str):
+        self._errors.setdefault(field, []).append(message)
+
     def bind_data(self):
         for name, field in self._fields.items():
             field.bind(self.form_data.get(name))
