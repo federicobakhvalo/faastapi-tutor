@@ -1,13 +1,13 @@
 class FormField:
     def __init__(
-        self,
-        name: str,
-        label: str,
-        input_type: str = "text",
-        required: bool = True,
-        placeholder: str | None = None,
-        attrs: dict | None = None,
-        extra_class: str = "",
+            self,
+            name: str,
+            label: str,
+            input_type: str = "text",
+            required: bool = True,
+            placeholder: str | None = None,
+            attrs: dict | None = None,
+            extra_class: str = "",
     ):
         self.name = name
         self.label = label
@@ -21,3 +21,19 @@ class FormField:
 
     def bind(self, value: str | None):
         self.value = value or ""
+
+
+class SelectField(FormField):
+    def __init__(
+            self,
+            name: str,
+            label: str,
+            choices: list[tuple],
+            required: bool = True,
+            placeholder: str | None = None,
+            attrs: dict | None = None,
+            extra_class: str = ""
+    ):
+        super().__init__(name, label, required=required, input_type="select", placeholder=placeholder, attrs=attrs,
+                         extra_class=extra_class)
+        self.choices = choices

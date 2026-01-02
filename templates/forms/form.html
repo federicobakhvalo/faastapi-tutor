@@ -11,16 +11,35 @@
 				{{ field.label }}
 			</label>
 
-			<input id="{{ field.name }}" name="{{ field.name }}" type="{{ field.input_type }}"
+			{% if field.input_type == "select" %}
+			<select name="{{ field.name }}" class="w-full rounded-lg border border-gray-700 bg-[#191919] border-[#303030] text-white px-3 py-2 focus:outline-none {{ field.extra_class }}" {% if field.required
+				%}required{% endif %}>
+				<option value="">---</option>
+				{% for value, label in field.choices %}
+				<option value="{{ value }}" {% if field.value==value|string %}selected{% endif %}>
+					{{ label }}
+				</option>
+				{% endfor %}
+			</select>
+			{% else %}
+
+			<input  id="{{ field.name }}" name="{{ field.name }}" type="{{ field.input_type }}"
 				placeholder="{{ field.placeholder }}" value="{{ field.value }}"
 				class="w-full rounded-lg border border-gray-700 bg-[#191919] border-[#303030] text-white px-3 py-2 focus:outline-none {{ field.extra_class }}" {% if field.required %}required{% endif %} {% for attr,
 				val in field.attrs.items() %} {{ attr }}="{{ val }}" {% endfor %}>
+
+			{% endif %}
 
 			{% if field.errors %}
 			<p class="text-red-500 text-sm mt-1">{{ field.errors | join(", ") }}</p>
 			{% endif %}
 		</div>
 		{% endfor %}
+		{% if form.non_field_errors %}
+		<div class="text-red-500 p-3 rounded text-sm font-semibold text-center">
+			*{{ form.non_field_errors | join(", ") }}
+		</div>
+		{% endif %}
 
 		<button type="submit"
 			class="cursor-pointer inline-flex bg-[#252525f2] items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white focus:outline-none hover:bg-[#393939f2] disabled:opacity-50 disabled:pointer-events-none w-full my-2">
