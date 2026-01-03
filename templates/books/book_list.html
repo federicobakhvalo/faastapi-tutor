@@ -23,7 +23,7 @@
 			class=" border border-[#6e6e6e] overflow-hidden rounded-xl cursor-pointer bg-[#202020] hover:bg-[#2f2f2f] ">
 			<div class="relative aspect-[3/4] overflow-hidden">
 				<img src="{{book.cover_url}}" class="w-full h-full absolute inset-0 object-cover object-center">
-				<a href="#">
+				<a href="{% if book.amount > 0 %}/create_bookloan/?book_id={{ book.id }}{% else %}#{% endif %}">
 					<button class="absolute left-1/2 -translate-x-1/2 max-w-[95%] cursor-pointer flex bottom-3 bg-[#00aff0] items-center justify-center rounded-lg px-4 py-2 text-sm font-medium text-white focus:outline-none
 				        disabled:opacity-50 disabled:pointer-events-none" {% if book.amount < 1 %}disabled{% endif %}>
 						Забронировать

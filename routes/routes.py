@@ -81,6 +81,69 @@ async def create_book(request: Request):
     return RedirectResponse("/", status_code=303)
 
 
+@router.get("/create_bookloan/", response_class=HTMLResponse)
+async def create_bookloan_form(
+        request: Request,
+        book_id: int | None = Query(None),
+):
+    book_repo = BookRepository()
+    initial = {}
+    if book_id is not None:
+        if await book_repo.exists(book_id):
+            print("Существует книга такая")
+            initial["book_id"] = book_id
+
+    form = BookLoanForm(
+        book_choices=await book_repo.list_choices(),
+        reader_choices=await ReaderRepository().list_choices(),
+        librarian_choices=await LibrarianRepository().list_choices(),
+        initial=initial,
+    )
+
+    return templates.TemplateResponse(
+        "forms/form.html",
+        {
+            "request": request,
+            "title": "Выдача книги",
+            "form": form,
+        }
+    )
+
+
+@router.post('/create_bookloan/', response_class=HTMLResponse)
+async def create_bookloan(request: Request):
+    data = dict(await request.form())
+    form = BookLoanForm(data, book_choices=await BookRepository().list_choices(),
+                        reader_choices=await ReaderRepository().list_choices(),
+                        librarian_choices=await LibrarianRepository().list_choices())
+
+    if not form.is_valid():
+        return templates.TemplateResponse(
+            "forms/form.html",
+            {
+                "request": request,
+                "title": "Выдача книги",
+                "form": form,
+            }
+        )
+
+    repo = BookLoanRepository()
+
+    try:
+        await repo.create(form.cleaned_data.model_dump())
+    except ValueError as e:
+        form.add_error(BaseForm.NON_FIELD_ERRORS, str(e))
+        return templates.TemplateResponse(
+            "forms/form.html",
+            {
+                "request": request,
+                "title": "Выдача книги",
+                "form": form,
+            }
+        )
+    return RedirectResponse("/books/", status_code=303)
+
+
 @router.post("/create_reader/", response_class=HTMLResponse)
 async def create_reader(request: Request):
     data = dict(await request.form())

@@ -19,8 +19,8 @@ class FormField:
         self.value: str = ""
         self.errors: list[str] = []
 
-    def bind(self, value: str | None):
-        self.value = value or ""
+    def bind(self, value):
+        self.value = "" if value is None else str(value)
 
 
 class SelectField(FormField):
@@ -37,6 +37,3 @@ class SelectField(FormField):
         super().__init__(name, label, required=required, input_type="select", placeholder=placeholder, attrs=attrs,
                          extra_class=extra_class)
         self.choices = choices
-
-
-

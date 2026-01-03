@@ -145,7 +145,7 @@ class Librarian(Base):
 
 
 class BookLoan(Base):
-    __tablename__ = "library_app_book_loan"
+    __tablename__ = "library_app_bookloan"
 
     id: Mapped[int] = mapped_column(primary_key=True)
 

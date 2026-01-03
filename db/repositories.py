@@ -35,6 +35,10 @@ class ReaderRepository:
 
 class BookRepository:
 
+    async def exists(self, book_id: int) -> bool:
+        async with db.session() as session:
+            return await session.get(Book, book_id) is not None
+
     async def list_choices(self):
         async with db.session() as session:
             stmt = BookQueryset().select_for_choices().query
@@ -75,6 +79,45 @@ class BookRepository:
                 await session.rollback()
                 raise ValueError("Не удалось создать книгу.Возможно,она существует с такими параметрами")
             return book
+
+
+class LibrarianRepository:
+
+    async def list_choices(self):
+        async with db.session() as session:
+            result = await session.execute(
+                select(Librarian.id, Librarian.first_name, Librarian.last_name).order_by(Librarian.last_name))
+            return [
+                (id_, f"{first_name}  {last_name}")
+                for id_, first_name, last_name in result.all()
+            ]
+
+
+class BookLoanRepository:
+    async def create(self, data: dict) -> BookLoan:
+        async with db.session() as session:
+            try:
+                async with session.begin():
+                    book = await session.get(Book, data['book_id'])
+                    if not book:
+                        raise ValueError("Такой книги не существует")
+                    if book.amount < 1:
+                        raise ValueError("такая книга недоступна для выдачи")
+                    book.amount -= 1
+
+                    loan = BookLoan(
+                        book_id=data["book_id"],
+                        reader_id=data["reader_id"],
+                        librarian_id=data.get("librarian_id"),
+                        due_date=data["due_date"],
+                        issued_at=datetime.utcnow(),
+                    )
+                    session.add(loan)
+                await session.refresh(loan)
+                return loan
+
+            except IntegrityError as E:
+                raise ValueError("Эта книга уже выдана данному читателю и ещё не возвращена")
 
 
 class BookAuthorRepository:

@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, HttpUrl, field_validator, Field
 from typing import Optional
+from datetime import date
 import re
 
 
@@ -59,4 +60,18 @@ class BookCreateSchema(BaseModel):
             raise ValueError(
                 "URL обложки должен оканчиваться на .jpg, .jpeg, .png или .webp"
             )
+        return v
+
+
+class BookLoanCreateSchema(BaseModel):
+    book_id: int
+    reader_id: int
+    librarian_id: int
+    due_date: date
+
+    @field_validator("due_date")
+    @classmethod
+    def validate_due_date(cls, v: date):
+        if v <= date.today():
+            raise ValueError("Дата возврата должна быть в будущем")
         return v

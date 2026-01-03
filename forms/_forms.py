@@ -1,6 +1,6 @@
 from forms.baseform import BaseForm
 from forms.formfield import FormField, SelectField
-from schemas.schemas import ReaderCreateSchema, BookCreateSchema
+from schemas.schemas import *
 
 
 class ReaderForm(BaseForm):
@@ -37,4 +37,26 @@ class BookForm(BaseForm):
             "amount": FormField("amount", "Количество", input_type="number", placeholder="Количество экземпляров"),
             "cover_url": FormField("cover_url", "Обложка (URL)", input_type="url",
                                    placeholder="Ссылка на обложку книги"),
+        }
+
+
+class BookLoanForm(BaseForm):
+    schema_class = BookLoanCreateSchema
+
+    def __init__(self, form_data=None, *, book_choices, reader_choices, librarian_choices, initial=None):
+        self.book_choices = book_choices
+        self.reader_choices = reader_choices
+        self.librarian_choices = librarian_choices
+        super().__init__(form_data, initial=initial)
+
+    def init_fields(self):
+        self._fields = {
+            "book_id": SelectField("book_id", "Книга", self.book_choices),
+            "reader_id": SelectField("reader_id", "Читатель", self.reader_choices),
+            "librarian_id": SelectField("librarian_id", "Библиотекарь", self.librarian_choices),
+            "due_date": FormField(
+                "due_date",
+                "Дата срока возврата книги",
+                input_type="date",
+            ),
         }
