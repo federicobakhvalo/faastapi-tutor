@@ -1,3 +1,4 @@
+from fastapi.params import Query
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi import FastAPI, HTTPException, Request, APIRouter
@@ -13,7 +14,7 @@ router = APIRouter()
 @router.get("/", response_class=HTMLResponse)
 async def main(request: Request):
     items = [
-        {'title': 'Все книги', 'url': '#'},
+        {'title': 'Все книги', 'url': '/books/'},
         {'title': 'Предложить книгу', 'url': '/create_book/'},
         {'title': 'Создать читателя', 'url': '/create_reader/'},
         {'title': 'Выдача книг', 'url': '#'},
@@ -35,6 +36,22 @@ async def create_book_form(request: Request):
     author_choices = await BookAuthorRepository().list_choices()
     form = BookForm(author_choices=author_choices)
     return templates.TemplateResponse("forms/form.html", {"request": request, "title": "Создать книгу", "form": form})
+
+
+@router.get('/books/', response_class=HTMLResponse)
+async def books_list(request: Request, page: int = Query(1, ge=1), page_size: int = Query(10, ge=1, le=100),
+                     q: str | None = Query(None)):
+    repo = BookRepository()
+    books, pagination = await  repo.list(page=page, page_size=page_size, search=q)
+    return templates.TemplateResponse(
+        "books/book_list.html",
+        {
+            "request": request,
+            "books": books,
+            "pagination": pagination,
+            "q": q,
+        }
+    )
 
 
 @router.post('/create_book/', response_class=HTMLResponse)
