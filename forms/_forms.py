@@ -20,7 +20,7 @@ class ReaderForm(BaseForm):
 class BookForm(BaseForm):
     schema_class = BookCreateSchema
 
-    def __init__(self, form_data=None, *, author_choices):
+    def __init__(self, form_data=None, *, author_choices=[]):
         self.author_choices = author_choices
         super().__init__(form_data)
 
@@ -32,8 +32,9 @@ class BookForm(BaseForm):
                 choices=self.author_choices,
             ),
             "bookname": FormField("bookname", "Название книги", placeholder="Введите название книги"),
-            "review": FormField("review", "Описание", required=False, placeholder="Ваш отзыв по книге"),
-            "amount": FormField("amount", "Количество", input_type="number"),
+            "review": FormField("review", "Описание", required=False, placeholder="Описание о книге",
+                                input_type="textarea", attrs={"rows": 2}),
+            "amount": FormField("amount", "Количество", input_type="number", placeholder="Количество экземпляров"),
             "cover_url": FormField("cover_url", "Обложка (URL)", input_type="url",
                                    placeholder="Ссылка на обложку книги"),
         }
