@@ -94,6 +94,18 @@ class LibrarianRepository:
 
 
 class BookLoanRepository:
+    async def list(self, *, page=1, page_size=10, order=None):
+        async with db.session() as session:
+            qs = BookLoanQueryset().as_list().order_(order).query
+
+            total = await session.scalar(select(func.count()).select_from(qs.subquery()))
+            pagination = Pagination(page=page, page_size=page_size, total=total)
+            result = await session.execute(
+                qs.limit(page_size).offset(pagination.offset)
+            )
+            rows = result.mappings().all()
+            return rows, pagination
+
     async def create(self, data: dict) -> BookLoan:
         async with db.session() as session:
             try:

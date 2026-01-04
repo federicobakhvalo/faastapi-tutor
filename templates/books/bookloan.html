@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="grow w-full max-w-6xl m-auto py-4 px-2">
+	<h2 class="text-2xl font-semibold mb-4 text-white">История выдачи книг</h2>
+
+
+	<div class="overflow-x-auto rounded-lg border border-gray-700">
+		<table class="min-w-full divide-y divide-gray-700">
+			<thead class="bg-gray-800">
+				<tr>
+					<th class="px-4 py-2 text-left text-sm font-medium text-gray-300 uppercase">Книга</th>
+
+					<th class="px-4 py-2 text-left text-sm font-medium text-gray-300 uppercase">Читатель</th>
+					<th class="px-4 py-2 text-left text-sm font-medium text-gray-300 uppercase">Библиотекарь</th>
+					<th class="px-4 py-2 text-left text-sm font-medium text-gray-300 uppercase">Выдано</th>
+					<th class="px-4 py-2 text-left text-sm font-medium text-gray-300 uppercase">Возврат</th>
+				</tr>
+			</thead>
+			<tbody class="bg-gray-900 divide-y divide-gray-700">
+				{% for loan in loans %}
+				<tr class="hover:bg-gray-800">
+					<td class="px-4 py-2 text-white text-xs">{{ loan.bookname }}</td>
+
+					<td class="px-4 py-2 text-white text-xs">{{loan.reader_name}}
+					</td>
+					<td class="px-4 py-2 text-gray-300 text-xs">
+						{% if loan.librarian_name %}
+						{{loan.librarian_name}}
+						{% else %}
+						-
+						{% endif %}
+					</td>
+					<td class="px-4 py-2 text-gray-300 text-xs">{{ loan.issued_at.strftime("%d.%m.%Y %H:%M") }}</td>
+					<td class="px-4 py-2 text-gray-300 text-xs flex items-center justify-between">
+						{% if loan.returned_at %}
+						{{ loan.returned_at.strftime("%d.%m.%Y") }}
+						{% else %}
+						<span class="text-yellow-400 font-medium">не возвращена</span>
+						{% endif %}
+						<a href="#">
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+								stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+									d="M15.232 5.232l3.536 3.536M16.5 3.5a2.121 2.121 0 013 3L7 19H4v-3L16.5 3.5z" />
+							</svg>
+						</a>
+					</td>
+				</tr>
+				
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+
+	{% if pagination.is_paginated %}
+	<div class="flex items-center justify-center gap-1 mt-6">
+	
+		<a {% if pagination.has_prev %} href="?page={{ pagination.page - 1 }}" class="inline-flex h-9 w-9 items-center justify-center rounded-full
+			           border border-[#303030] bg-[#191919] text-white
+			           hover:bg-[#252525] transition" {% else %} class="inline-flex h-9 w-9 items-center justify-center rounded-full
+			           border border-[#303030] bg-[#191919] text-white
+			           opacity-40 pointer-events-none" {% endif %}>
+			‹
+		</a>
+	
+	
+		<a {% if pagination.has_next %} href="?page={{ pagination.page + 1 }}" class="inline-flex h-9 w-9 items-center justify-center rounded-full
+			           border border-[#303030] bg-[#191919] text-white
+			           hover:bg-[#252525] transition" {% else %} class="inline-flex h-9 w-9 items-center justify-center rounded-full
+			           border border-[#303030] bg-[#191919] text-white
+			           opacity-40 pointer-events-none" {% endif %}>
+			›
+		</a>
+	
+	
+	</div>
+	{% endif %}
+</div>
+{% endblock %}

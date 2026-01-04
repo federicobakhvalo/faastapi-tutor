@@ -81,6 +81,21 @@ async def create_book(request: Request):
     return RedirectResponse("/", status_code=303)
 
 
+@router.get('/bookloan/', response_class=HTMLResponse)
+async def bookloan_list(request: Request, page: int = Query(1, ge=1), page_size: int = Query(10, ge=1, le=100)):
+    repo = BookLoanRepository()
+    loans, pagination = await repo.list(page=page, page_size=page_size)
+    return templates.TemplateResponse(
+        "books/bookloan.html",
+        {
+            "request": request,
+            "loans": loans,
+            "pagination": pagination,
+
+        }
+    )
+
+
 @router.get("/create_bookloan/", response_class=HTMLResponse)
 async def create_bookloan_form(
         request: Request,

@@ -1,4 +1,4 @@
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func
 from sqlalchemy.orm import contains_eager
 
 from .models import *
@@ -49,6 +49,42 @@ class BookQueryset:
         else:
             self._stmt = self._stmt.order_by(Book.id)
 
+        return self
+
+    @property
+    def query(self):
+        return self._stmt
+
+
+class BookLoanQueryset:
+    def __init__(self):
+        self._stmt = select(BookLoan)
+
+    def order_(self, field: str | None):
+        if field:
+            desc = field.startswith("-")
+            field_name = field.lstrip("-")
+            column = getattr(BookLoan, field_name, None)
+            if column:
+                self._stmt = self._stmt.order_by(column.desc() if desc else column.asc())
+        else:
+            self._stmt = self._stmt.order_by(BookLoan.id)
+        return self
+
+    def as_list(self):
+        self._stmt = (
+            select(
+                BookLoan.id,
+                BookLoan.issued_at,
+                BookLoan.returned_at,
+                Book.bookname.label("bookname"),
+                func.concat_ws(" ", Reader.first_name, Reader.last_name).label("reader_name"),
+                func.concat_ws(" ", Librarian.first_name, Librarian.last_name).label("librarian_name"),
+            )
+            .join(Book)
+            .join(Reader)
+            .outerjoin(Librarian)
+        )
         return self
 
     @property
