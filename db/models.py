@@ -120,6 +120,9 @@ class Reader(Base):
         uselist=False
     )
 
+    def as_dict(self):
+        return {c.key: getattr(self, c.key) for c in self.__table__.columns}
+
     def __repr__(self) -> str:
         return f"<Reader {self.first_name} {self.last_name}>"
 

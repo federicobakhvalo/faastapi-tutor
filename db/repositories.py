@@ -24,6 +24,7 @@ class ReaderRepository:
             result = await session.execute(stmt)
             row = result.mappings().first()
 
+
             return dict(row) if row else None
 
     async def list_choices(self) -> list[tuple[int, str]]:

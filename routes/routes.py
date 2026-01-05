@@ -1,6 +1,6 @@
 from fastapi.params import Query
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi import FastAPI, HTTPException, Request, APIRouter
 from sqlalchemy.exc import IntegrityError
 
@@ -287,3 +287,15 @@ async def create_reader_ticket(request: Request):
 
     return RedirectResponse("/", status_code=303)
     pass
+
+
+@router.get("/reader/{reader_id}")
+async def reader_detail(reader_id: int):
+    repo = ReaderRepository()
+    data = await repo.get_reader(reader_id)
+    print(data)
+
+    if not data:
+        return RedirectResponse("/", status_code=302)
+
+    return JSONResponse({"hello": "world"})

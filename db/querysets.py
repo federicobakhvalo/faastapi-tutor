@@ -4,14 +4,41 @@ from sqlalchemy.orm import contains_eager
 from .models import *
 
 
-class ReaderQuerySet:
-    def __init__(self):
-        self._stmt = select(Reader)
-        self._joined_ticket = False
+class BaseQuerySet:
+    def __init__(self, model_class):
+        self.model_class = model_class
+        self._stmt = select(model_class)
+
+    def filter_by_id(self, obj_id: int):
+        self._stmt = self._stmt.where(self.model_class.id == obj_id)
+        return self
 
     def one(self):
         self._stmt = self._stmt.limit(1)
         return self
+
+    def order_by(self, field: str | None):
+        if field:
+            desc = field.startswith('-')
+            field_name = field.lstrip('-')
+            column = getattr(self.model_class, field_name, None)
+            if column:
+                self._stmt = self._stmt.order_by(column.desc() if desc else column.asc())
+
+        else:
+            self._stmt = self._stmt.order_by(self.model_class.id)
+
+        return self
+
+    @property
+    def query(self):
+        return self._stmt
+
+
+class ReaderQuerySet(BaseQuerySet):
+    def __init__(self):
+        super().__init__(Reader)
+        self._joined_ticket = False
 
     def list_choices(self):
         self._stmt = (
@@ -22,10 +49,6 @@ class ReaderQuerySet:
             )
             .order_by(Reader.last_name, Reader.first_name)
         )
-        return self
-
-    def filter_by_id(self, reader_id: int):
-        self._stmt = self._stmt.where(Reader.id == reader_id)
         return self
 
     def with_ticket(self):
@@ -62,9 +85,9 @@ class ReaderQuerySet:
         return self
 
 
-class BookQueryset:
+class BookQueryset(BaseQuerySet):
     def __init__(self):
-        self._stmt = select(Book)
+        super().__init__(Book)
         self._joined_author = False
 
     def select_for_choices(self):
@@ -96,38 +119,10 @@ class BookQueryset:
 
         return self
 
-    def order_by(self, field: str | None):
-        if field:
-            desc = field.startswith('-')
-            field_name = field.lstrip('-')
-            column = getattr(Book, field_name, None)
-            if column:
-                self._stmt = self._stmt.order_by(column.desc() if desc else column.asc())
 
-        else:
-            self._stmt = self._stmt.order_by(Book.id)
-
-        return self
-
-    @property
-    def query(self):
-        return self._stmt
-
-
-class BookLoanQueryset:
+class BookLoanQueryset(BaseQuerySet):
     def __init__(self):
-        self._stmt = select(BookLoan)
-
-    def order_(self, field: str | None):
-        if field:
-            desc = field.startswith("-")
-            field_name = field.lstrip("-")
-            column = getattr(BookLoan, field_name, None)
-            if column:
-                self._stmt = self._stmt.order_by(column.desc() if desc else column.asc())
-        else:
-            self._stmt = self._stmt.order_by(BookLoan.id)
-        return self
+        super().__init__(BookLoan)
 
     def as_list(self):
         self._stmt = (
@@ -144,7 +139,3 @@ class BookLoanQueryset:
             .outerjoin(Librarian)
         )
         return self
-
-    @property
-    def query(self):
-        return self._stmt
