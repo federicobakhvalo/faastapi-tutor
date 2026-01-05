@@ -62,6 +62,21 @@ class BookLoanForm(BaseForm):
         }
 
 
+class ReaderTicketForm(BaseForm):
+    schema_class = ReaderTicketSchema
+
+    def __init__(self, form_data=None, *, reader_choices):
+        self.reader_choices = reader_choices
+        super().__init__(form_data)
+
+    def init_fields(self):
+        self._fields = {"reader_id": SelectField(
+            name="reader_id",
+            label="Читатель",
+            choices=self.reader_choices
+        ), }
+
+
 class BookLoanUpdateForm(BaseForm):
     schema_class = BookLoanUpdateSchema
 

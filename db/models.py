@@ -189,7 +189,7 @@ class BookLoan(Base):
 
 
 class ReaderTicket(Base):
-    __tablename__ = "library_app_reader_ticket"
+    __tablename__ = "library_app_readerticket"
 
     id: Mapped[int] = mapped_column(primary_key=True)
 

@@ -87,3 +87,7 @@ class BookLoanUpdateSchema(BaseModel):
         if v == "":
             return None
         return v
+
+
+class ReaderTicketSchema(BaseModel):
+    reader_id: int

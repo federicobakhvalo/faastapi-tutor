@@ -18,7 +18,7 @@ async def main(request: Request):
         {'title': 'Предложить книгу', 'url': '/create_book/'},
         {'title': 'Создать читателя', 'url': '/create_reader/'},
         {'title': 'Выдача книг', 'url': '/bookloan/'},
-        {'title': "Создать читательский билет", 'url': "#"}
+        {'title': "Создать читательский билет", 'url': "/readerticket/"}
     ]
     return templates.TemplateResponse("main.html", {"request": request, "items": items})
 
@@ -247,3 +247,43 @@ async def update_bookloan(
         )
 
     return RedirectResponse("/bookloan/", status_code=303)
+
+
+@router.get('/readerticket/', response_class=HTMLResponse)
+async def readerticket_form(request: Request):
+    reader_choices = await ReaderRepository().list_choices()
+    form = ReaderTicketForm(reader_choices=reader_choices)
+    return templates.TemplateResponse(
+        "forms/form.html",
+        {
+            "request": request,
+            "title": "Создать читательский билет",
+            "form": form,
+        }
+    )
+
+
+@router.post("/readerticket/", response_class=HTMLResponse)
+async def create_reader_ticket(request: Request):
+    data = dict(await request.form())
+    reader_choices = await ReaderRepository().list_choices()
+    form = ReaderTicketForm(data, reader_choices=reader_choices)
+
+    if not form.is_valid():
+        return templates.TemplateResponse(
+            "forms/form.html",
+            {"request": request, "title": "Создать читательский билет", "form": form},
+        )
+
+    repo = ReaderTicketRepository()
+    try:
+        await repo.create(form.cleaned_data.model_dump().get('reader_id', None))
+    except ValueError as e:
+        form.add_error("__all__", str(e))
+        return templates.TemplateResponse(
+            "forms/form.html",
+            {"request": request, "title": "Создать читательский билет", "form": form},
+        )
+
+    return RedirectResponse("/", status_code=303)
+    pass

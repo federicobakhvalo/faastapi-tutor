@@ -182,3 +182,20 @@ class BookAuthorRepository:
                 select(BookAuthor.id, BookAuthor.name).order_by(BookAuthor.name)
             )
             return result.all()
+
+
+class ReaderTicketRepository:
+    async def create(self, reader_id: int | None):
+        async with db.session() as session:
+            if not reader_id:
+                raise ValueError('Читатель не найден')
+            ticket = ReaderTicket(reader_id=reader_id)
+            session.add(ticket)
+            try:
+                await session.commit()
+                await session.refresh(ticket)
+            except IntegrityError as E:
+                await session.rollback()
+                raise ValueError("Возможно , у читателя уже есть билет")
+
+            return ticket
