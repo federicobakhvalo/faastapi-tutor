@@ -60,3 +60,22 @@ class BookLoanForm(BaseForm):
                 input_type="date",
             ),
         }
+
+
+class BookLoanUpdateForm(BaseForm):
+    schema_class = BookLoanUpdateSchema
+
+    def init_fields(self):
+        self._fields = {
+            "due_date": FormField(
+                "due_date",
+                "Дата срока возврата книги",
+                input_type="date",
+            ),
+            "returned_at": FormField(
+                "returned_at",
+                "Дата возврата книги читателем",
+                input_type="date",
+                required=False,
+            ),
+        }

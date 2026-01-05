@@ -17,7 +17,7 @@ async def main(request: Request):
         {'title': 'Все книги', 'url': '/books/'},
         {'title': 'Предложить книгу', 'url': '/create_book/'},
         {'title': 'Создать читателя', 'url': '/create_reader/'},
-        {'title': 'Выдача книг', 'url': '#'},
+        {'title': 'Выдача книг', 'url': '/bookloan/'},
         {'title': "Создать читательский билет", 'url': "#"}
     ]
     return templates.TemplateResponse("main.html", {"request": request, "items": items})
@@ -189,3 +189,61 @@ async def create_reader(request: Request):
             }
         )
     return RedirectResponse("/", status_code=303)
+
+
+@router.get("/bookloan/{loan_id}/", response_class=HTMLResponse)
+async def update_bookloan_form(request: Request, loan_id: int):
+    repo = BookLoanRepository()
+    loan = await repo.get(loan_id)
+    if not loan:
+        return RedirectResponse("/bookloan/")
+
+    form = BookLoanUpdateForm(initial={"due_date": loan.due_date,
+                                       "returned_at": loan.returned_at.date() if loan.returned_at else None})
+
+    print(loan.due_date, loan.returned_at)
+
+    return templates.TemplateResponse(
+        "forms/form.html",
+        {
+            "request": request,
+            "title": "Обновление выдачи",
+            "form": form,
+        }
+    )
+
+
+@router.post("/bookloan/{loan_id}/", response_class=HTMLResponse)
+async def update_bookloan(
+        request: Request,
+        loan_id: int,
+):
+    data = dict(await request.form())
+    form = BookLoanUpdateForm(data)
+
+    if not form.is_valid():
+        return templates.TemplateResponse(
+            "forms/form.html",
+            {
+                "request": request,
+                "title": "Обновление выдачи",
+                "form": form,
+            }
+        )
+
+    repo = BookLoanRepository()
+
+    try:
+        await repo.update(loan_id, form.cleaned_data.model_dump())
+    except ValueError as e:
+        form.add_error(form.NON_FIELD_ERRORS, str(e))
+        return templates.TemplateResponse(
+            "forms/form.html",
+            {
+                "request": request,
+                "title": "Обновление выдачи",
+                "form": form,
+            }
+        )
+
+    return RedirectResponse("/bookloan/", status_code=303)

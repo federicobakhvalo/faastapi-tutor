@@ -4,6 +4,7 @@ from sqlalchemy import select, func
 from sqlalchemy.exc import IntegrityError
 from .querysets import *
 from schemas.pagination import Pagination
+from datetime import date, datetime, time
 
 db = Database()
 
@@ -94,6 +95,41 @@ class LibrarianRepository:
 
 
 class BookLoanRepository:
+
+    async def get(self, loan_id: int) -> BookLoan | None:
+        async with db.session() as session:
+            return await session.get(BookLoan, loan_id)
+
+    async def update(self, loan_id: int, data: dict) -> BookLoan | None:
+        async with db.session() as session:
+            async with session.begin():
+                loan = await session.get(BookLoan, loan_id, with_for_update=True)
+                if not loan:
+                    raise ValueError("Выдача не найдена")
+                old_returned = loan.returned_at
+                new_returned = data.get('returned_at', None)
+                if new_returned and new_returned <= loan.issued_at.date():
+                    raise ValueError("Дата возврата должна быть позже даты выдачи")
+                loan.due_date = data["due_date"]
+                loan.returned_at = (
+                    datetime.combine(new_returned, time(23, 59, 59))
+                    if new_returned
+                    else None
+                )
+                book = await session.get(Book, loan.book_id, with_for_update=True)
+
+                if old_returned is None and new_returned is not None:
+                    book.amount += 1
+
+                elif old_returned is not None and new_returned is None:
+                    if book.amount < 1:
+                        raise ValueError(
+                            "Невозможно отменить возврат — нет доступных экземпляров"
+                        )
+                    book.amount -= 1
+            await session.refresh(loan)
+            return loan
+
     async def list(self, *, page=1, page_size=10, order=None):
         async with db.session() as session:
             qs = BookLoanQueryset().as_list().order_(order).query

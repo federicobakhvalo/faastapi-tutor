@@ -75,3 +75,15 @@ class BookLoanCreateSchema(BaseModel):
         if v <= date.today():
             raise ValueError("Дата возврата должна быть в будущем")
         return v
+
+
+class BookLoanUpdateSchema(BaseModel):
+    due_date: date
+    returned_at: date | None = None
+
+    @field_validator("returned_at", mode="before")
+    @classmethod
+    def empty_to_none(cls, v):
+        if v == "":
+            return None
+        return v
