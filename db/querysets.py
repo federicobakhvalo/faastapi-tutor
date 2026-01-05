@@ -4,6 +4,64 @@ from sqlalchemy.orm import contains_eager
 from .models import *
 
 
+class ReaderQuerySet:
+    def __init__(self):
+        self._stmt = select(Reader)
+        self._joined_ticket = False
+
+    def one(self):
+        self._stmt = self._stmt.limit(1)
+        return self
+
+    def list_choices(self):
+        self._stmt = (
+            select(
+                Reader.id,
+                Reader.first_name,
+                Reader.last_name,
+            )
+            .order_by(Reader.last_name, Reader.first_name)
+        )
+        return self
+
+    def filter_by_id(self, reader_id: int):
+        self._stmt = self._stmt.where(Reader.id == reader_id)
+        return self
+
+    def with_ticket(self):
+        if not self._joined_ticket:
+            self._stmt = (
+                self._stmt
+                .outerjoin(ReaderTicket, ReaderTicket.reader_id == Reader.id)
+                .add_columns(
+                    ReaderTicket.code.label("ticket_code"),
+                    ReaderTicket.is_active.label("ticket_active"),
+                )
+            )
+            self._joined_ticket = True
+        return self
+
+    def with_active_loans_count(self):
+        subq = (
+            select(
+                BookLoan.reader_id,
+                func.count(BookLoan.id).label("active_loans"),
+            )
+            .where(BookLoan.returned_at.is_(None))
+            .group_by(BookLoan.reader_id)
+            .subquery()
+        )
+
+        self._stmt = (
+            self._stmt
+            .outerjoin(subq, subq.c.reader_id == Reader.id)
+            .add_columns(
+                func.coalesce(subq.c.active_loans, 0).label("active_loans")
+            )
+        )
+        return self
+
+
 class BookQueryset:
     def __init__(self):
         self._stmt = select(Book)

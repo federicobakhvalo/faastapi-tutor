@@ -11,15 +11,24 @@ db = Database()
 
 class ReaderRepository:
 
+    async def get_reader(self, reader_id: int):
+        async with db.session() as session:
+            stmt = (
+                ReaderQuerySet()
+                .filter_by_id(reader_id)
+                .with_ticket()
+                .with_active_loans_count()
+                .query
+            )
+
+            result = await session.execute(stmt)
+            row = result.mappings().first()
+
+            return dict(row) if row else None
+
     async def list_choices(self) -> list[tuple[int, str]]:
         async with db.session() as session:
-            result = await session.execute(
-                select(
-                    Reader.id,
-                    Reader.first_name,
-                    Reader.last_name,
-                ).order_by(Reader.last_name, Reader.first_name)
-            )
+            result = await session.execute(ReaderQuerySet().list_choices().query)
             return [
                 (id_, f"{first} {last}")
                 for id_, first, last in result.all()
