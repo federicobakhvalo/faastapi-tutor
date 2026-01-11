@@ -3,7 +3,9 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi import FastAPI, HTTPException, Request, APIRouter
 from sqlalchemy.exc import IntegrityError
+from fastapi import Depends
 
+from dependencies import get_db_session
 from forms._forms import *
 from db.repositories import *
 
@@ -32,16 +34,16 @@ async def create_reader_form(request: Request):
 
 
 @router.get("/create_book/", response_class=HTMLResponse)
-async def create_book_form(request: Request):
-    author_choices = await BookAuthorRepository().list_choices()
+async def create_book_form(request: Request, session: AsyncSession = Depends(get_db_session)):
+    author_choices = await BookAuthorRepository(session).list_choices()
     form = BookForm(author_choices=author_choices)
     return templates.TemplateResponse("forms/form.html", {"request": request, "title": "Создать книгу", "form": form})
 
 
 @router.get('/books/', response_class=HTMLResponse)
 async def books_list(request: Request, page: int = Query(1, ge=1), page_size: int = Query(10, ge=1, le=100),
-                     q: str | None = Query(None)):
-    repo = BookRepository()
+                     q: str | None = Query(None), session: AsyncSession = Depends(get_db_session)):
+    repo = BookRepository(session)
     books, pagination = await  repo.list(page=page, page_size=page_size, search=q)
     return templates.TemplateResponse(
         "books/book_list.html",
@@ -55,8 +57,8 @@ async def books_list(request: Request, page: int = Query(1, ge=1), page_size: in
 
 
 @router.post('/create_book/', response_class=HTMLResponse)
-async def create_book(request: Request):
-    author_choices = await BookAuthorRepository().list_choices()
+async def create_book(request: Request, session: AsyncSession = Depends(get_db_session)):
+    author_choices = await BookAuthorRepository(session).list_choices()
     data = dict(await request.form())
     form = BookForm(data, author_choices=author_choices)
     if not form.is_valid():
@@ -64,7 +66,7 @@ async def create_book(request: Request):
                                           {'request': request, 'title': "Создать книгу", "form": form})
     # print(form.cleaned_data.model_dump())
 
-    repo = BookRepository()
+    repo = BookRepository(session)
     try:
         await repo.create(form.cleaned_data.model_dump(mode='json'))
     except ValueError as e:
@@ -82,8 +84,9 @@ async def create_book(request: Request):
 
 
 @router.get('/bookloan/', response_class=HTMLResponse)
-async def bookloan_list(request: Request, page: int = Query(1, ge=1), page_size: int = Query(10, ge=1, le=100)):
-    repo = BookLoanRepository()
+async def bookloan_list(request: Request, session: AsyncSession = Depends(get_db_session), page: int = Query(1, ge=1),
+                        page_size: int = Query(10, ge=1, le=100)):
+    repo = BookLoanRepository(session)
     loans, pagination = await repo.list(page=page, page_size=page_size)
     return templates.TemplateResponse(
         "books/bookloan.html",
@@ -100,8 +103,9 @@ async def bookloan_list(request: Request, page: int = Query(1, ge=1), page_size:
 async def create_bookloan_form(
         request: Request,
         book_id: int | None = Query(None),
+        session: AsyncSession = Depends(get_db_session)
 ):
-    book_repo = BookRepository()
+    book_repo = BookRepository(session)
     initial = {}
     if book_id is not None:
         if await book_repo.exists(book_id):
@@ -110,8 +114,8 @@ async def create_bookloan_form(
 
     form = BookLoanForm(
         book_choices=await book_repo.list_choices(),
-        reader_choices=await ReaderRepository().list_choices(),
-        librarian_choices=await LibrarianRepository().list_choices(),
+        reader_choices=await ReaderRepository(session).list_choices(),
+        librarian_choices=await LibrarianRepository(session).list_choices(),
         initial=initial,
     )
 
@@ -126,11 +130,11 @@ async def create_bookloan_form(
 
 
 @router.post('/create_bookloan/', response_class=HTMLResponse)
-async def create_bookloan(request: Request):
+async def create_bookloan(request: Request, session: AsyncSession = Depends(get_db_session)):
     data = dict(await request.form())
-    form = BookLoanForm(data, book_choices=await BookRepository().list_choices(),
-                        reader_choices=await ReaderRepository().list_choices(),
-                        librarian_choices=await LibrarianRepository().list_choices())
+    form = BookLoanForm(data, book_choices=await BookRepository(session).list_choices(),
+                        reader_choices=await ReaderRepository(session).list_choices(),
+                        librarian_choices=await LibrarianRepository(session).list_choices())
 
     if not form.is_valid():
         return templates.TemplateResponse(
@@ -142,7 +146,7 @@ async def create_bookloan(request: Request):
             }
         )
 
-    repo = BookLoanRepository()
+    repo = BookLoanRepository(session)
 
     try:
         await repo.create(form.cleaned_data.model_dump())
@@ -160,7 +164,7 @@ async def create_bookloan(request: Request):
 
 
 @router.post("/create_reader/", response_class=HTMLResponse)
-async def create_reader(request: Request):
+async def create_reader(request: Request, session: AsyncSession = Depends(get_db_session)):
     data = dict(await request.form())
     form = ReaderForm(data)
     if not form.is_valid():
@@ -172,7 +176,7 @@ async def create_reader(request: Request):
                 "form": form
             }
         )
-    repo = ReaderRepository()
+    repo = ReaderRepository(session)
     try:
         await repo.create(form.cleaned_data.model_dump())
     except IntegrityError:
@@ -192,8 +196,8 @@ async def create_reader(request: Request):
 
 
 @router.get("/bookloan/{loan_id}/", response_class=HTMLResponse)
-async def update_bookloan_form(request: Request, loan_id: int):
-    repo = BookLoanRepository()
+async def update_bookloan_form(request: Request, loan_id: int, session: AsyncSession = Depends(get_db_session)):
+    repo = BookLoanRepository(session)
     loan = await repo.get(loan_id)
     if not loan:
         return RedirectResponse("/bookloan/")
@@ -217,6 +221,7 @@ async def update_bookloan_form(request: Request, loan_id: int):
 async def update_bookloan(
         request: Request,
         loan_id: int,
+        session: AsyncSession = Depends(get_db_session)
 ):
     data = dict(await request.form())
     form = BookLoanUpdateForm(data)
@@ -231,7 +236,7 @@ async def update_bookloan(
             }
         )
 
-    repo = BookLoanRepository()
+    repo = BookLoanRepository(session)
 
     try:
         await repo.update(loan_id, form.cleaned_data.model_dump())
@@ -250,8 +255,8 @@ async def update_bookloan(
 
 
 @router.get('/readerticket/', response_class=HTMLResponse)
-async def readerticket_form(request: Request):
-    reader_choices = await ReaderRepository().list_choices()
+async def readerticket_form(request: Request, session: AsyncSession = Depends(get_db_session)):
+    reader_choices = await ReaderRepository(session).list_choices()
     form = ReaderTicketForm(reader_choices=reader_choices)
     return templates.TemplateResponse(
         "forms/form.html",
@@ -264,9 +269,9 @@ async def readerticket_form(request: Request):
 
 
 @router.post("/readerticket/", response_class=HTMLResponse)
-async def create_reader_ticket(request: Request):
+async def create_reader_ticket(request: Request, session: AsyncSession = Depends(get_db_session)):
     data = dict(await request.form())
-    reader_choices = await ReaderRepository().list_choices()
+    reader_choices = await ReaderRepository(session).list_choices()
     form = ReaderTicketForm(data, reader_choices=reader_choices)
 
     if not form.is_valid():
@@ -275,7 +280,7 @@ async def create_reader_ticket(request: Request):
             {"request": request, "title": "Создать читательский билет", "form": form},
         )
 
-    repo = ReaderTicketRepository()
+    repo = ReaderTicketRepository(session)
     try:
         await repo.create(form.cleaned_data.model_dump().get('reader_id', None))
     except ValueError as e:
@@ -290,8 +295,8 @@ async def create_reader_ticket(request: Request):
 
 
 @router.get("/reader/{reader_id}")
-async def reader_detail(reader_id: int):
-    repo = ReaderRepository()
+async def reader_detail(reader_id: int, session: AsyncSession = Depends(get_db_session)):
+    repo = ReaderRepository(session)
     data = await repo.get_reader(reader_id)
     print(data)
 

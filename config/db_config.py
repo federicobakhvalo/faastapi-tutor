@@ -8,12 +8,14 @@ ENV_DIR = BASE_DIR / "environments"
 env_style = os.getenv("ENV_TYPE", "dev")
 env_file = ENV_DIR / f".env.{env_style}"
 
+
 class DBSettings(BaseSettings):
     user: str
     password: str
     host: str = "localhost"
     port: int = 5432
     name: str
+    echo: bool
 
     @property
     def url(self) -> str:
